@@ -163,3 +163,5 @@ cython_debug/
 .idea/
 
 /Config.py
+
+.DS_Store
