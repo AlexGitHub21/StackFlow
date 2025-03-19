@@ -1,9 +1,15 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, url_for
 from extensions import db
 from Config import Configuration
 from models import Product, Inventory, Location
 import pymysql
+from forms import AddProductForm, AddLocationForm, AddInventoryForm, ReduceQuantityForm
+import decimal
+from sqlalchemy.sql import func
+from sqlalchemy import update
+# from typing import Dec
 pymysql.install_as_MySQLdb()
+from flask import jsonify
 
 app = Flask(__name__)
 
@@ -17,120 +23,224 @@ context['products'] = []
 
 
 def get_products():
-    products = Product.query.all()
-    result = []
-    for product in products:
-        invs = Inventory.query.filter(Inventory.product_id == product.id).all()
-        inv_quantity = [str(inv.quantity) for inv in invs]
+    products = db.session.query(
+        Product.id,
+        Product.name,
+        Product.description,
+        Product.price,
+        func.coalesce(Inventory.quantity, "").label("quantity"),
+        func.coalesce(Location.name, "").label("location_name")
+    ).select_from(Product) \
+        .outerjoin(Inventory, Product.id == Inventory.product_id) \
+        .outerjoin(Location, Inventory.location_id == Location.id) \
+        .order_by(Inventory.id).all()
+    return products
 
-        locs = Location.query.filter(Location.id == product.id).all()
-        loc_name = [loc.name for loc in locs]
-        inv_quantity = ' '.join(inv_quantity)
-        loc_name = ' '.join(loc_name)
-        product_data = {
-            'id': product.id,
-            'name': product.name,
-            'description': product.description,
-            'price': product.price,
-            'quantity': inv_quantity,
-            'location_name': loc_name
-        }
-        result.append(product_data)
-    return result
+
+def record_product(name: str, desc: str, price: decimal):
+    product = Product(
+        name=name,
+        description=desc,
+        price=price
+    )
+    db.session.add(product)
+    db.session.commit()
+    return True
+
+
+def record_location(name: str):
+    location = Location.query.filter_by(name=name).first()
+    if location:
+        return False
+    else:
+        new_location = Location(name=name)
+        db.session.add(new_location)
+        db.session.commit()
+        return True
+
+
+def add_new_inventory(prod_id: int, loc_id: int, quantity: int):
+    new_inventory = Inventory(
+        product_id=prod_id,
+        location_id=loc_id,
+        quantity=quantity
+    )
+    db.session.add(new_inventory)
+    db.session.commit()
+    return quantity
+
+
+def record_inventory(prod_id: int, loc_id: int, quantity: int):
+    inventory = Inventory.query.filter_by(product_id=prod_id).first()
+    if inventory:
+        if inventory.location_id == loc_id:
+            new_quantity = inventory.quantity + quantity
+            rows = Inventory.query.filter_by(product_id=prod_id).update({'quantity': new_quantity})
+            db.session.commit()
+            # update_query = update(Inventory).where(Inventory.c.product_id == prod_id).values(quantity=new_quantity)
+            # db.session.add(update_query)
+            # db.session.commit()
+            return new_quantity
+        else:
+            return add_new_inventory(prod_id, loc_id, quantity)
+    else:
+        return add_new_inventory(prod_id, loc_id, quantity)
+
+
+def update_quantity(prod_id: int, loc: str, quantity: int):
+    location = Location.query.filter_by(name=loc).first()
+    inventory = Inventory.query.filter_by(product_id=prod_id, location_id=location.id).first()
+    if inventory:
+        new_quantity = inventory.quantity - quantity
+        if new_quantity >= 0:
+            rows = Inventory.query.filter_by(product_id=prod_id, location_id=location.id).update({'quantity': new_quantity})
+            db.session.commit()
+            return new_quantity
+        else:
+            return new_quantity
+    else:
+        return quantity
 
 
 @app.route('/')
 @app.route('/products')
 def index():
     products = get_products()
+    locations = Location.query.all()
+    location_form = AddLocationForm()
+    product_form = AddProductForm()
+    inventory_form = AddInventoryForm()
+    reduce_quantity_form = ReduceQuantityForm()
+    return render_template('products.html',
+                           products=products,
+                           locations=locations,
+                           product_form=product_form,
+                           location_form=location_form,
+                           inventory_form=inventory_form,
+                           reduce_form=reduce_quantity_form)
 
-    return render_template('products.html', products=products)
 
-
-@app.route('/add_products', methods=['GET', 'POST'])
+@app.route('/add_product', methods=['GET', 'POST'])
 def add_product():
-    if request.method == "POST":
-        try:
-            p = Product(name=request.form.get('name'), description=request.form.get('description'), price=request.form.get('price'))
-
-            db.session.add(p)
-            db.session.flush()
-            db.session.commit()
-            context['products'].append(p)
-            redirect('/products')
-
-        except:
-            db.session.rollback()
-            print("Ошибка добавления в БД")
-    return render_template('products.html')
-
-
-@app.route('/add_locations', methods=['GET', 'POST'])
-def add_locations():
     products = get_products()
+    locations = Location.query.all()
+    location_form = AddLocationForm()
+    product_form = AddProductForm()
+    inventory_form = AddInventoryForm()
+    reduce_quantity_form = ReduceQuantityForm()
+    if product_form.validate_on_submit():
 
+        new_product = record_product(product_form.name.data, product_form.description.data, product_form.price.data)
+
+        if new_product:
+            product = {"name": product_form.name.data, "description": product_form.description.data,
+                       "price": product_form.price.data, "quantity": 0, "location_name": ""}
+            print('Товар добавлен в БД')
+            return jsonify(success=True, new_product=product)
+
+        else:
+            # db.session.rollback()
+            print("Ошибка добавление в БД")
+            return jsonify(success=False)
+    return render_template('products.html',
+                           products=products,
+                           locations=locations,
+                           product_form=product_form,
+                           location_form=location_form,
+                           inventory_form=inventory_form,
+                           reduce_form=reduce_quantity_form)
+
+
+@app.route('/add_location', methods=['GET', 'POST'])
+def add_location():
+    products = get_products()
+    locations = Location.query.all()
+    location_form = AddLocationForm()
+    product_form = AddProductForm()
+    inventory_form = AddInventoryForm()
+    reduce_quantity_form = ReduceQuantityForm()
+    if location_form.validate_on_submit():
+        new_location = record_location(location_form.name.data)
+        if new_location:
+            return jsonify(success=True, name=location_form.name.data)
+        else:
+            jsonify(success=False, error="Такая локация уже есть в БД")
+
+    return render_template('products.html',
+                           products=products,
+                           locations=locations,
+                           product_form=product_form,
+                           location_form=location_form,
+                           inventory_form=inventory_form,
+                           reduce_form=reduce_quantity_form)
+
+
+@app.route('/add_inventory', methods=['GET', 'POST'])
+def add_inventory():
+    products = get_products()
+    locations = Location.query.all()
+    location_form = AddLocationForm()
+    product_form = AddProductForm()
+    inventory_form = AddInventoryForm()
+    reduce_quantity_form = ReduceQuantityForm()
     if request.method == "POST":
-        try:
-            quantity = 0
-            l = Location(name=request.form.get('name'))
+        data = request.get_json(force=True)
+        product_id = data.get('product_id')
+        location_id = int(data.get('location_id'))
+        quantity = int(data.get('quantity'))
 
-            db.session.add(l)
-            db.session.flush()
+        new_quantity = record_inventory(product_id, location_id, quantity)
 
-            id_last_rec_loc = int(l.id)
-            id_last_rec_prod = int(products[-1]['id'])
-            if id_last_rec_loc == id_last_rec_prod:
-                inv = Inventory(product_id=id_last_rec_prod, location_id=id_last_rec_loc, quantity=quantity)
-                db.session.add(inv)
-                db.session.flush()
-                db.session.commit()
+        if new_quantity:
+            location = Location.query.filter(Location.id == location_id).first()
+            print('Запись проведена')
+            data = {'newQuantity': new_quantity, 'newLocation': location.name}
+            return jsonify(success=True, new_data=data)
+        else:
+            print("Ошибка добавление записи в БД")
+            return jsonify({'error': 'Ошибка добавления в БД'}), 400  # Ошибка с кодом 400
 
-        except:
-            db.session.rollback()
-            print("Ошибка добавления в БД")
+    return render_template('products.html',
+                           products=products,
+                           locations=locations,
+                           product_form=product_form,
+                           location_form=location_form,
+                           inventory_form=inventory_form,
+                           reduce_form=reduce_quantity_form)
 
-    return render_template('products.html', products=products)
 
-
-@app.route('/add_quantity', methods=['GET', 'POST'])
-def add_quantity():
-
-    product_id = request.form.get('product_id')
-    quantity = int(request.form.get('quantity'))
+@app.route('/reduce_quantity', methods=['GET', 'POST'])
+def reduce_quantity():
+    # product_id = request.form.get('product_id')
     products = Product.query.all()
-
+    reduce_quantity_form = ReduceQuantityForm()
     if request.method == "POST":
-        try:
-            loc = Inventory.query.filter(Inventory.product_id == product_id).first()
-            if loc:
-                quantity += loc.quantity
+        data = request.get_json(force=True)
+        product_id = data.get('product_id')
+        quantity = int(data.get('quantity'))
+        location = data.get('location_id')
 
-                Inventory.query.filter(Inventory.product_id == product_id,
-                                       Inventory.location_id == loc.id).update({'quantity': quantity})
-            db.session.commit()
-        except:
-            db.session.rollback()
-            print("Ошибка добавления в БД")
+        new_quantity = update_quantity(product_id, location, quantity)
 
-    return render_template('products.html', products=products)
+        if new_quantity >= 0:
+            print('Запись проведена')
+            data = {'newQuantity': new_quantity, 'newLocation': location}
+
+            return jsonify(success=True, new_data=data)
+        else:
+            print("Количество товара не мб отрицательным")
+            return jsonify(success=False)  # Ошибка с кодом 400
+
+    return render_template('products.html',
+                           products=products,
+                           reduce_form=reduce_quantity_form)
 
 
-@app.route('/delete_prod', methods=['GET', 'POST'])
-def delete_prod():
-    product_id = request.form.get('product_id')
-    products = Product.query.all()
-    if request.method == "POST":
-        try:
-            prod = Product.query.filter(Product.id == product_id).first()
-            if prod:
-
-                Inventory.query.filter(Inventory.product_id == product_id).update({'quantity': 0})
-            db.session.commit()
-        except:
-            db.session.rollback()
-            print("Ошибка добавления в БД")
-
-    return render_template('products.html', products=products)
+@app.route('/get_locations', methods=['GET'])
+def get_locations():
+    locations = Location.query.all()
+    location_list = [{'id': loc.id, 'name': loc.name} for loc in locations]
+    return jsonify({'locations': location_list})
 
 
 if __name__ == '__main__':
