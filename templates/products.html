@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <title>Учет товаров на складах</title>
-
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/products.css') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ url_for('static', filename='js/products.js') }}"></script>
 
 </head>
 <body>
-<button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal1">Добавить товар</button>
-<button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal2">Добавить локацию</button>
-
+<nav class="navbar fixed-top navbar-light">
+    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal1">Добавить товар</button>
+    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal2">Добавить локацию</button>
+</nav>
 
 <div class="modal fade" id="modal1" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -126,6 +128,10 @@
                           {{ reduce_form.quantity.label(class="form-label") }}
                           {{ reduce_form.quantity(class="form-control") }}
                       </div>
+                      <div>
+                          <input type="checkbox" id="del" name="check-del" />
+                            <label for="del">Удалить из памяти</label>
+                      </div>
                       <div class="modal-footer">
                           {{ reduce_form.submit(class="btn btn-danger") }}
                       </div>
@@ -136,28 +142,41 @@
     </div>
 </div>
 {% block container %}
-    <table class="table table-striped" id="table">
+    <table class="table table-striped table-bordered table caption-top" id="table">
+        <caption>Список товаров</caption>
         <thead>
             <tr>
-                <th>Название товара</th>
-                <th>Описание товара</th>
-                <th>Цена товара</th>
-                <th>Количество товара</th>
-                <th>Локация товара</th>
-                <th></th>
-                <th></th>
+                <th class="text-center">Название товара</th>
+                <th class="text-center">Описание товара</th>
+                <th class="text-center">Цена товара</th>
+                <th class="text-center">Количество товара</th>
+                <th class="text-center">Локация товара</th>
+                <th class="text-center"></th>
+                <th class="text-center"></th>
             </tr>
         </thead>
         <tbody id="product-list">
             {% for product in products %}
-                <tr data-row_id="{{ loop.index0 }}">
+                <tr data-row_id="{{ loop.index0 }}" class="text-center align-middle">
                     <td>{{ product.name }}</td>
                     <td>{{ product.description }}</td>
                     <td>{{ product.price }}</td>
                     <td class="product-quantity">{{ product.quantity }}</td>
                     <td class="product-location">{{ product.location_name }}</td>
-                    <td><button type="submit" id='save_id' data-product_id="{{ product.id }}" class="btn btn-outline-primary open-modal" data-bs-toggle="modal" data-bs-target="#modal3">Добавить на склад</button></td>
-                    <td><button type="button" id='delete_prod' data-product_id="{{ product.id }}" class="btn btn-outline-primary open-modal" data-bs-toggle="modal" data-bs-target="#modal4">Удалить со склада</button></td>
+                    <td>
+                        <button type="submit" id='save_id' data-product_id="{{ product.id }}"
+                                class="btn btn-outline-primary open-modal"
+                                data-bs-toggle="modal" title="Добавить на склад" data-bs-target="#modal3">
+                            <img src="{{ url_for('static', filename='images/add-button.png') }}">
+                        </button>
+                    </td>
+                    <td>
+                        <button type="button" id='delete_prod' data-product_id="{{ product.id }}"
+                                class="btn btn-outline-primary open-modal"
+                                data-bs-toggle="modal" title="Удалить со склада" data-bs-target="#modal4">
+                            <img src="{{ url_for('static', filename='images/delete-button.png') }}">
+                        </button>
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>

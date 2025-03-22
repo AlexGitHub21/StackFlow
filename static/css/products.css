@@ -1,0 +1,23 @@
+img {
+    width: 25px;
+    height: 25px;
+
+}
+.btn-outline-primary {
+    height: 50px;
+    margin: 10px;
+}
+.btn-outline-primary:hover {
+    background-color: #e3f2fd !important;
+    color: black !important;
+}
+.navbar-light {
+    background-color: #e3f2fd;
+    margin-bottom: 25px;
+}
+caption {
+    text-align: center !important;
+    color: black !important;
+    font-size: 20px !important;
+    margin-bottom: 10px;
+}

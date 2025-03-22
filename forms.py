@@ -23,4 +23,4 @@ class AddInventoryForm(FlaskForm):
 
 class ReduceQuantityForm(FlaskForm):
     quantity = IntegerField("Количество товара", validators=[DataRequired()])
-    submit = SubmitField("Удалить со склада")
+    submit = SubmitField("Удалить")

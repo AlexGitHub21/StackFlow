@@ -11,16 +11,34 @@ $(document).ready(function(){
                     var newRowId = $('#product-list tr').length; // Определяем новый индекс
                     // Добавляем новый товар в список без перезагрузки страницы
                     $('#product-list').append(`
-                        <tr data-row_id="${newRowId}">
+                        <tr data-row_id="${newRowId}" class="text-center align-middle">
                             <td>${response.new_product.name}</td>
                             <td>${response.new_product.description}</td>
                             <td>${response.new_product.price}</td>
                             <td class="product-quantity">${response.new_product.quantity}</td>
                             <td class="product-location">${response.new_product.location_name}</td>
-                            <td><button type="submit" id='save_id' data-product_id=${newRowId} class="btn btn-outline-primary open-modal" data-bs-toggle="modal" data-bs-target="#modal3">Добавить на склад</button></td>
-                            <td><button type="button" id='delete_prod' data-product_id=${newRowId} class="btn btn-outline-primary open-modal" data-bs-toggle="modal" data-bs-target="#modal4">Удалить со склада</button></td>
+                            <td>
+                                <button type="submit" id='save_id' data-product_id=${newRowId}
+                                    class="btn btn-outline-primary open-modal"
+                                    data-bs-toggle="modal" title="Добавить на склад"
+                                    data-bs-target="#modal3">
+                                   <img src="static/images/add-button.png">
+                                </button>
+                            </td>
+                            <td>
+                                <button type="button" id='delete_prod' data-product_id=${newRowId}
+                                    class="btn btn-outline-primary open-modal"
+                                    data-bs-toggle="modal" title="Удалить со склада"
+                                    data-bs-target="#modal4">
+                                   <img src="static/images/delete-button.png">
+                                   </button>
+                                </td>
                         </tr>
                     `);
+                    var newTooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                    newTooltips.forEach(function (tooltipTriggerEl) {
+                    new bootstrap.Tooltip(tooltipTriggerEl);
+                    });
                     // Закрываем модальное окно
                     $('#modal1').modal('hide');
                     // Очищаем форму
@@ -164,5 +182,11 @@ $(document).ready(function(){
         } else {
         alert("Некорректные данные");
         }
+    });
+});
+document.addEventListener("DOMContentLoaded", function () {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl);
     });
 });
