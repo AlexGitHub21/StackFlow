@@ -211,36 +211,6 @@ def add_inventory():
                            reduce_form=reduce_quantity_form)
 
 
-@app.route('/delete_inventory', methods=['POST'])
-def delete_inventory():
-    products = get_products()
-    locations = Location.query.all()
-    location_form = AddLocationForm()
-    product_form = AddProductForm()
-    inventory_form = AddInventoryForm()
-    reduce_quantity_form = ReduceQuantityForm()
-    if request.method == "POST":
-        data = request.get_json()
-        inventory_ids = data.get('inventory_ids', [])
-        print(inventory_ids)
-
-        if not inventory_ids:
-            return jsonify(success=False, error="Ошибка")
-
-        else:
-            Inventory.query.filter(Inventory.id.in_(inventory_ids)).delete(synchronize_session=False)
-            db.session.commit()
-
-            return jsonify(success=True)
-
-    return render_template('products.html',
-                           products=products,
-                           locations=locations,
-                           product_form=product_form,
-                           location_form=location_form,
-                           inventory_form=inventory_form,
-                           reduce_form=reduce_quantity_form)
-
 
 
 @app.route('/reduce_quantity', methods=['GET', 'POST'])
@@ -263,7 +233,7 @@ def reduce_quantity():
             return jsonify(success=True, new_data=data)
         else:
             print("Количество товара не мб отрицательным")
-            return jsonify(success=False, error="Количество товара не мб отрицательным"), 400
+            return jsonify(success=False, error="Количество товара не мб отрицательным")
 
     return render_template('products.html',
                            products=products,
