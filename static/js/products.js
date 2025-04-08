@@ -8,17 +8,17 @@ $(document).ready(function(){
             data: form.serialize(),
             success: function(response) {
                 if (response.success) {
-                    var newRowId = $('#product-list tr').length; // Определяем новый индекс
+                    var newRowId = $('#product-list tr').length+1; // Определяем новый индекс
                     // Добавляем новый товар в список без перезагрузки страницы
                     $('#product-list').append(`
-                        <tr data-row_id="${newRowId}" class="text-center align-middle">
+                        <tr data-row_id="${newRowId}" data-product_id="${response.new_product.id}" class="text-center align-middle">
                             <td>${response.new_product.name}</td>
                             <td>${response.new_product.description}</td>
                             <td>${response.new_product.price}</td>
                             <td class="product-quantity">${response.new_product.quantity}</td>
                             <td class="product-location">${response.new_product.location_name}</td>
                             <td>
-                                <button type="submit" id='save_id' data-product_id=${newRowId}
+                                <button type="submit" id='save_id' data-product_id=${response.new_product.id}
                                     class="btn btn-outline-primary open-modal"
                                     data-bs-toggle="modal" title="Добавить на склад"
                                     data-bs-target="#modal3">
@@ -26,7 +26,7 @@ $(document).ready(function(){
                                 </button>
                             </td>
                             <td>
-                                <button type="button" id='delete_prod' data-product_id=${newRowId}
+                                <button type="button" id='delete_prod' data-product_id=${response.new_product.id}
                                     class="btn btn-outline-primary open-modal"
                                     data-bs-toggle="modal" title="Удалить со склада"
                                     data-bs-target="#modal4">
@@ -121,12 +121,16 @@ $(document).ready(function(){
     $('#form3').off('submit').on('submit', function(event) {
         event.preventDefault();
         selectedRow = $(this).data('selectedRow');
-        locationID = $('#form3 select[name="location_id"]').val();
+        locationID = parseInt($('#form3 select[name="location_id"]').val());
         var additionalQuantity = parseInt($('#form3 input[name="quantity"]').val() || 0); // Получаем quantity
         console.log("AddQuantity:", additionalQuantity)
         var currentQuantity = parseInt(selectedRow.find('.product-quantity').text() || 0); //Получаем текущее количество
         console.log("CurrentQuantity:", currentQuantity);
-        if (productID && locationID) {
+        var currentLocation = selectedRow.find('.product-location').text().trim();
+        if (!locationID) {
+            alert("Не выбрана локация")
+        }
+        if (productID) {
             $.ajax({
                 type: 'POST',
                 url: '/add_inventory',
@@ -134,12 +138,61 @@ $(document).ready(function(){
                 data: JSON.stringify({ product_id: productID, location_id: locationID, quantity: additionalQuantity }),
                 success: function(response) {
                     if (response.success) {
-                        selectedRow.find('.product-quantity').text(response.new_data.newQuantity).hide().fadeIn();
-                        selectedRow.find('.product-location').text(response.new_data.newLocation).hide().fadeIn();
+                        var newQuantity = response.new_data.newQuantity;
+                        var newLocation = response.new_data.newLocation;
+                        var existingRow = $('#product-list tr').filter(function() {
+                            return $(this).find('.product-location').text().trim() === newLocation &&
+                                    $(this).attr('data-product_id') == productID;
+                        });
+                        // Ситуация 1: Если нет строки с такой локацией, добавляем строку
+                        if (existingRow.length === 0) {
+                            // Проверяем, есть ли строки с другим товаром, но без локации (т.е. это текущий товар без локации)
+                            var rowWithoutLocation = $('#product-list tr').filter(function() {
+                                return $(this).attr('data-product_id') == productID &&
+                                       $(this).find('.product-location').text().trim() === '';
+                            });
+
+                        // Если такая строка есть (товар без локации), обновляем её
+                        if (rowWithoutLocation.length > 0) {
+                            rowWithoutLocation.find('.product-location').text(newLocation);
+                            rowWithoutLocation.find('.product-quantity').text(newQuantity).hide().fadeIn();
+                        } else {
+                            var newRowId = $('#product-list tr').length + 1;
+                            $('#product-list').append(`
+                                <tr data-row_id="${newRowId}" data-product_id="${productID}" class="text-center align-middle">
+                                    <td>${response.new_data.name}</td>
+                                    <td>${response.new_data.description}</td>
+                                    <td>${response.new_data.price}</td>
+                                    <td class="product-quantity">${response.new_data.newQuantity}</td>
+                                    <td class="product-location">${response.new_data.newLocation}</td>
+                                    <td>
+                                        <button type="submit" id='save_id' data-product_id=${productID}
+                                            class="btn btn-outline-primary open-modal"
+                                            data-bs-toggle="modal" title="Добавить на склад"
+                                            data-bs-target="#modal3">
+                                           <img src="static/images/add-button.png">
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button type="button" id='delete_prod' data-product_id=${productID}
+                                            class="btn btn-outline-primary open-modal"
+                                            data-bs-toggle="modal" title="Удалить со склада"
+                                            data-bs-target="#modal4">
+                                           <img src="static/images/delete-button.png">
+                                           </button>
+                                        </td>
+                                </tr>
+                            `);
+                        }
+                    } else {
+                    // Ситуация 2: Если строка с такой локацией есть, обновляем только количество
+                        existingRow.find('.product-quantity').text(newQuantity).hide().fadeIn();
+                    }
+
                         $('#modal3').modal('hide');
                         $('#form3')[0].reset();
                     } else {
-                    alert("Ошибка обновления данных");
+                        alert("Ошибка обновления данных");
                     }
                 }
             });
@@ -164,7 +217,7 @@ $(document).ready(function(){
                 type: 'POST',
                 url: '/reduce_quantity',
                 contentType: "application/json",
-                data: JSON.stringify({ product_id: productID, location_id: location, quantity: reduceQuantity }),
+                data: JSON.stringify({ product_id: productID, location: location, quantity: reduceQuantity }),
                 success: function(response) {
                     if (response.success) {
                         selectedRow.find('.product-quantity').text(response.new_data.newQuantity).hide().fadeIn();

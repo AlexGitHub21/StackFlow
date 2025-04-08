@@ -12,177 +12,178 @@
 
 </head>
 <body>
-<nav class="navbar fixed-top navbar-light">
-    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal1">Добавить товар</button>
-    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal2">Добавить локацию</button>
-</nav>
+    <nav class="navbar navbar-expand-lg fixed-top navbar-light">
+        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal1">Добавить товар</button>
+        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal2">Добавить локацию</button>
 
-<div class="modal fade" id="modal1" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="ModalLabel1">Добавить товар</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-              <form action="{{ url_for('add_product') }}" method="post" class="add_product_form" id="form1">
-                  <div class="mb-3">
-                      {{ product_form.hidden_tag() }}
-                  </div>
-                  <div class="mb-3">
-                      {{ product_form.name.label(class="form-label") }} {{ product_form.name(class="form-control") }}
-                  </div>
-                  <div class="mb-3">
-                      {{ product_form.description.label(class="form-label") }} {{ product_form.description(class="form-control") }}
-                  </div>
-                  <div class="mb-3">
-                      {{ product_form.price.label(class="form-label") }}
-                      <input type="text" name="price" class="form-control" value="{{ product_form.price.data }}">
-                  </div>
-                  <div class="modal-footer">
-                      {{ product_form.submit(class="btn btn-danger") }}
-                  </div>
-              </form>
+    </nav>
+
+    <div class="modal fade" id="modal1" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="ModalLabel1">Добавить товар</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                  <form action="{{ url_for('add_product') }}" method="post" class="add_product_form" id="form1">
+                      <div class="mb-3">
+                          {{ product_form.hidden_tag() }}
+                      </div>
+                      <div class="mb-3">
+                          {{ product_form.name.label(class="form-label") }} {{ product_form.name(class="form-control") }}
+                      </div>
+                      <div class="mb-3">
+                          {{ product_form.description.label(class="form-label") }} {{ product_form.description(class="form-control") }}
+                      </div>
+                      <div class="mb-3">
+                          {{ product_form.price.label(class="form-label") }}
+                          <input type="text" name="price" class="form-control" value="{{ product_form.price.data }}">
+                      </div>
+                      <div class="modal-footer">
+                          {{ product_form.submit(class="btn btn-danger") }}
+                      </div>
+                  </form>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
     </div>
-</div>
-<div class="modal fade" id="modal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="ModalLabel2">Добавить локацию</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-          <div class="modal-body">
-              <div class="form-group">
+    <div class="modal fade" id="modal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="ModalLabel2">Добавить локацию</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+              <div class="modal-body">
                   <div class="form-group">
-                      <form action="{{ url_for('add_location') }}" method="post" class="add_location_form" id="form2">
+                      <div class="form-group">
+                          <form action="{{ url_for('add_location') }}" method="post" class="add_location_form" id="form2">
+                              <div class="mb-3">
+                                  {{ location_form.hidden_tag() }}
+                              </div>
+                              <div class="mb-3">
+                                  {{ location_form.name.label(class="form-label") }} {{
+                                  location_form.name(class="form-control") }}
+                              </div>
+                              <div class="modal-footer">
+                                  {{ location_form.submit(class="btn btn-danger") }}
+                              </div>
+                          </form>
+                      </div>
+                  </div>
+              </div>
+          </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modal3" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="ModalLabel3">Добавить на склад</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+              <div class="modal-body">
+                  <div class="form-group">
+                      <form action="{{ url_for('add_inventory') }}" method="post" class="add_inventory_form" id="form3">
                           <div class="mb-3">
-                              {{ location_form.hidden_tag() }}
+                              {{ inventory_form.hidden_tag() }}
                           </div>
                           <div class="mb-3">
-                              {{ location_form.name.label(class="form-label") }} {{
-                              location_form.name(class="form-control") }}
+                              {{ inventory_form.location.label(class="form-label") }}
+                              <select name="location_id" class="form-control">
+                                  {% for location in locations %}
+                                    <option value="{{ location.id }}">{{ location.name }}</option>
+                                  {% endfor %}
+                              </select>
+                          </div>
+                          <div class="mb-3">
+                              {{ inventory_form.quantity.label(class="form-label") }}
+                              {{ inventory_form.quantity(class="form-control") }}
                           </div>
                           <div class="modal-footer">
-                              {{ location_form.submit(class="btn btn-danger") }}
+                              {{ inventory_form.submit(class="btn btn-danger") }}
                           </div>
                       </form>
                   </div>
               </div>
           </div>
-      </div>
-    </div>
-</div>
-<div class="modal fade" id="modal3" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="ModalLabel3">Добавить на склад</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-          <div class="modal-body">
-              <div class="form-group">
-                  <form action="{{ url_for('add_inventory') }}" method="post" class="add_inventory_form" id="form3">
-                      <div class="mb-3">
-                          {{ inventory_form.hidden_tag() }}
-                      </div>
-                      <div class="mb-3">
-                          {{ inventory_form.location.label(class="form-label") }}
-                          <select name="location_id" class="form-control">
-                              {% for location in locations %}
-                                <option value="{{ location.id }}">{{ location.name }}</option>
-                              {% endfor %}
-                          </select>
-                      </div>
-                      <div class="mb-3">
-                          {{ inventory_form.quantity.label(class="form-label") }}
-                          {{ inventory_form.quantity(class="form-control") }}
-                      </div>
-                      <div class="modal-footer">
-                          {{ inventory_form.submit(class="btn btn-danger") }}
-                      </div>
-                  </form>
+    </div>
+    <div class="modal fade" id="modal4" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="ModalLabel4">Удалить со склада</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+              <div class="modal-body">
+                  <div class="form-group">
+                      <form action="{{ url_for('reduce_quantity') }}" method="post" class="reduce_quantity_form" id="form4">
+                          <div class="mb-3">
+                              {{ reduce_form.hidden_tag() }}
+                          </div>
+                          <div class="mb-3">
+                              {{ reduce_form.quantity.label(class="form-label") }}
+                              {{ reduce_form.quantity(class="form-control") }}
+                          </div>
+
+                          <div class="modal-footer">
+                              {{ reduce_form.submit(class="btn btn-danger") }}
+                          </div>
+                      </form>
+                  </div>
               </div>
           </div>
-      </div>
-    </div>
-</div>
-<div class="modal fade" id="modal4" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="ModalLabel4">Удалить со склада</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-          <div class="modal-body">
-              <div class="form-group">
-                  <form action="{{ url_for('reduce_quantity') }}" method="post" class="reduce_quantity_form" id="form4">
-                      <div class="mb-3">
-                          {{ reduce_form.hidden_tag() }}
-                      </div>
-                      <div class="mb-3">
-                          {{ reduce_form.quantity.label(class="form-label") }}
-                          {{ reduce_form.quantity(class="form-control") }}
-                      </div>
-                      <div>
-                          <input type="checkbox" id="del" name="check-del" />
-                            <label for="del">Удалить из памяти</label>
-                      </div>
-                      <div class="modal-footer">
-                          {{ reduce_form.submit(class="btn btn-danger") }}
-                      </div>
-                  </form>
-              </div>
-          </div>
-      </div>
     </div>
-</div>
-{% block container %}
-    <table class="table table-striped table-bordered table caption-top" id="table">
-        <caption>Список товаров</caption>
-        <thead>
-            <tr>
-                <th class="text-center">Название товара</th>
-                <th class="text-center">Описание товара</th>
-                <th class="text-center">Цена товара</th>
-                <th class="text-center">Количество товара</th>
-                <th class="text-center">Локация товара</th>
-                <th class="text-center"></th>
-                <th class="text-center"></th>
-            </tr>
-        </thead>
-        <tbody id="product-list">
-            {% for product in products %}
-                <tr data-row_id="{{ loop.index0 }}" class="text-center align-middle">
-                    <td>{{ product.name }}</td>
-                    <td>{{ product.description }}</td>
-                    <td>{{ product.price }}</td>
-                    <td class="product-quantity">{{ product.quantity }}</td>
-                    <td class="product-location">{{ product.location_name }}</td>
-                    <td>
-                        <button type="submit" id='save_id' data-product_id="{{ product.id }}"
-                                class="btn btn-outline-primary open-modal"
-                                data-bs-toggle="modal" title="Добавить на склад" data-bs-target="#modal3">
-                            <img src="{{ url_for('static', filename='images/add-button.png') }}">
-                        </button>
-                    </td>
-                    <td>
-                        <button type="button" id='delete_prod' data-product_id="{{ product.id }}"
-                                class="btn btn-outline-primary open-modal"
-                                data-bs-toggle="modal" title="Удалить со склада" data-bs-target="#modal4">
-                            <img src="{{ url_for('static', filename='images/delete-button.png') }}">
-                        </button>
-                    </td>
+    {% block container %}
+        <div class="caption">Список товаров</div>
+        <table class="table table-bordered border-dark table-responsive" id="table">
+            <thead>
+                <tr class="text-center align-middle border-dark">
+                    <th>Название товара</th>
+                    <th>Описание товара</th>
+                    <th>Цена товара</th>
+                    <th>Количество товара</th>
+                    <th>Локация товара</th>
+                    <th></th>
+                    <th></th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-{% endblock %}
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+            </thead>
+            <tbody id="product-list">
+                {% for product in products %}
+                    <tr data-row_id="{{ loop.index }}" data-product_id="{{ product.id }}" class="text-center align-middle">
+                        <td>{{ product.name }}</td>
+                        <td>{{ product.description }}</td>
+                        <td>{{ product.price }}</td>
+                        <td class="product-quantity">{{ product.quantity }}</td>
+                        <td class="product-location">{{ product.location_name }}</td>
+                        <td>
+                            <button type="submit" id='save_id' data-product_id="{{ product.id }}"
+                                    class="btn btn-outline-primary open-modal"
+                                    data-bs-content="Добавить на склад"
+                                    data-bs-toggle="modal"
+                                    title="Добавить на склад"
+                                    data-bs-target="#modal3">
+                                <img src="{{ url_for('static', filename='images/add-button.png') }}">
+                            </button>
+                        </td>
+                        <td>
+                            <button type="button" id='delete_prod' data-product_id="{{ product.id }}"
+                                    class="btn btn-outline-primary open-modal"
+                                    data-bs-toggle="modal" title="Удалить со склада" data-bs-target="#modal4">
+                                <img src="{{ url_for('static', filename='images/delete-button.png') }}">
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 </body>
 </html>

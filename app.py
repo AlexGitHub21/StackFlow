@@ -6,8 +6,6 @@ import pymysql
 from forms import AddProductForm, AddLocationForm, AddInventoryForm, ReduceQuantityForm
 import decimal
 from sqlalchemy.sql import func
-from sqlalchemy import update
-# from typing import Dec
 pymysql.install_as_MySQLdb()
 from flask import jsonify
 
@@ -16,10 +14,6 @@ app = Flask(__name__)
 app.config.from_object(Configuration)
 
 db.init_app(app)
-
-
-context = {}
-context['products'] = []
 
 
 def get_products():
@@ -33,7 +27,7 @@ def get_products():
     ).select_from(Product) \
         .outerjoin(Inventory, Product.id == Inventory.product_id) \
         .outerjoin(Location, Inventory.location_id == Location.id) \
-        .order_by(Inventory.id).all()
+        .order_by(Product.id).all()
     return products
 
 
@@ -71,18 +65,19 @@ def add_new_inventory(prod_id: int, loc_id: int, quantity: int):
 
 
 def record_inventory(prod_id: int, loc_id: int, quantity: int):
-    inventory = Inventory.query.filter_by(product_id=prod_id).first()
+    inventory = Inventory.query.filter_by(product_id=prod_id, location_id=loc_id).first()
     if inventory:
-        if inventory.location_id == loc_id:
-            new_quantity = inventory.quantity + quantity
-            rows = Inventory.query.filter_by(product_id=prod_id).update({'quantity': new_quantity})
-            db.session.commit()
+        # if inventory.location_id == loc_id:
+        new_quantity = inventory.quantity + quantity
+        inventory.quantity = new_quantity
+        # rows = Inventory.query.filter_by(product_id=prod_id).update({'quantity': new_quantity})
+        db.session.commit()
             # update_query = update(Inventory).where(Inventory.c.product_id == prod_id).values(quantity=new_quantity)
             # db.session.add(update_query)
             # db.session.commit()
-            return new_quantity
-        else:
-            return add_new_inventory(prod_id, loc_id, quantity)
+        return new_quantity
+        # else:
+        #     return add_new_inventory(prod_id, loc_id, quantity)
     else:
         return add_new_inventory(prod_id, loc_id, quantity)
 
@@ -131,17 +126,19 @@ def add_product():
     if product_form.validate_on_submit():
 
         new_product = record_product(product_form.name.data, product_form.description.data, product_form.price.data)
-
+        product = Product.query.filter_by(name=product_form.name.data).first()
+        print(id)
         if new_product:
-            product = {"name": product_form.name.data, "description": product_form.description.data,
-                       "price": product_form.price.data, "quantity": 0, "location_name": ""}
+            product = {"id": product.id, "name": product_form.name.data, "description": product_form.description.data,
+                       "price": product_form.price.data, "quantity": "", "location_name": ""}
             print('Товар добавлен в БД')
             return jsonify(success=True, new_product=product)
 
         else:
-            # db.session.rollback()
+
             print("Ошибка добавление в БД")
             return jsonify(success=False)
+
     return render_template('products.html',
                            products=products,
                            locations=locations,
@@ -185,16 +182,21 @@ def add_inventory():
     reduce_quantity_form = ReduceQuantityForm()
     if request.method == "POST":
         data = request.get_json(force=True)
-        product_id = data.get('product_id')
+        product_id = int(data.get('product_id'))
         location_id = int(data.get('location_id'))
         quantity = int(data.get('quantity'))
 
         new_quantity = record_inventory(product_id, location_id, quantity)
+        product = Product.query.filter(Product.id == product_id).first()
+        print(product.name)
+        print(product.description)
+        print(product.price)
 
         if new_quantity:
             location = Location.query.filter(Location.id == location_id).first()
             print('Запись проведена')
-            data = {'newQuantity': new_quantity, 'newLocation': location.name}
+            data = {'name': product.name, 'description': product.description, 'price': product.price,
+                    'newQuantity': new_quantity, 'newLocation': location.name}
             return jsonify(success=True, new_data=data)
         else:
             print("Ошибка добавление записи в БД")
@@ -209,6 +211,38 @@ def add_inventory():
                            reduce_form=reduce_quantity_form)
 
 
+@app.route('/delete_inventory', methods=['POST'])
+def delete_inventory():
+    products = get_products()
+    locations = Location.query.all()
+    location_form = AddLocationForm()
+    product_form = AddProductForm()
+    inventory_form = AddInventoryForm()
+    reduce_quantity_form = ReduceQuantityForm()
+    if request.method == "POST":
+        data = request.get_json()
+        inventory_ids = data.get('inventory_ids', [])
+        print(inventory_ids)
+
+        if not inventory_ids:
+            return jsonify(success=False, error="Ошибка")
+
+        else:
+            Inventory.query.filter(Inventory.id.in_(inventory_ids)).delete(synchronize_session=False)
+            db.session.commit()
+
+            return jsonify(success=True)
+
+    return render_template('products.html',
+                           products=products,
+                           locations=locations,
+                           product_form=product_form,
+                           location_form=location_form,
+                           inventory_form=inventory_form,
+                           reduce_form=reduce_quantity_form)
+
+
+
 @app.route('/reduce_quantity', methods=['GET', 'POST'])
 def reduce_quantity():
     # product_id = request.form.get('product_id')
@@ -218,7 +252,7 @@ def reduce_quantity():
         data = request.get_json(force=True)
         product_id = data.get('product_id')
         quantity = int(data.get('quantity'))
-        location = data.get('location_id')
+        location = data.get('location')
 
         new_quantity = update_quantity(product_id, location, quantity)
 
@@ -229,7 +263,7 @@ def reduce_quantity():
             return jsonify(success=True, new_data=data)
         else:
             print("Количество товара не мб отрицательным")
-            return jsonify(success=False)  # Ошибка с кодом 400
+            return jsonify(success=False, error="Количество товара не мб отрицательным"), 400
 
     return render_template('products.html',
                            products=products,
